@@ -1,0 +1,10 @@
+#！ /bin/bash
+
+CURRENTTIME=`date|cut -d" " -f1-4 |cut -d":" -f1,2` 
+#date -d "1 minute ago"|cut -d" " -f1-4,6
+#last -F|sed '$d'|sed '$d'|sed -n '/boot/!p' |sed -n '/still logged in/!p'|sed -n '/crash/!p'|sed -n '/down/!p' > last.tmp
+last -F|sed -n '/boot/!p' |sed -n '/still logged in/!p'|sed -n '/crash/!p'|sed -n '/down/!p' > last.tmp
+LOGINTIME=`cat last.tmp |grep "$CURRENTTIME"|awk '{print $4,$5,$6,$7}' `
+LOGOUTTIME=`cat last.tmp |grep "$CURRENTTIME"|awk '{print $10,$11,$12,$13}' `
+
+

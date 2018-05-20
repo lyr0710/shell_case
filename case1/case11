@@ -1,0 +1,50 @@
+#!/bin/bash
+
+checkProcLoad(){
+#    if [ -f overloadproc ]; then
+#       > overloadproc
+#    else
+#        touch overloadproc
+#    fi
+
+    ps -ef|grep -E "$1"|grep -v grep|sed 's/ * / /g'|cut -f2 -d " " > processid
+    cat processid | while read line
+    do
+        PSEOCPU=`ps -eo pid,pcpu,comm | grep $line `
+        PSEOMEM=`ps -eo pid,pmem,comm | grep $line`
+	PCPU=`echo ${PSEOCPU:5:5}|cut -f1 -d"."`
+	PMEM=`echo ${PSEOMEM:5:5}|cut -f1 -d"."`
+	if [ "$PCPU" -ge 1 -o "$PMEM" -ge 1 ]; then
+	    echo -e `date`" \c"  >> overloadproc    
+	    ps -p $line -O ppid,comm|sed 's/ * / /g'|sed '1d' >> overloadproc
+
+        fi
+    done
+}
+
+
+SSHPROC=`ps -ef|grep ssh|grep -v grep`
+JAVAPROC=`ps -ef|grep java|grep -v grep`
+
+if [ -n "$SSHPROC" -a -n "$JAVAPROC" ]; then
+    PROC="ssh|java"
+    checkProcLoad $PROC
+elif [ -n "$SSHPROC" -a -z "$JAVAPROC" ]; then
+    PROC="ssh"
+    checkProcLoad $PROC
+ #   echo -e `date`" \c" >> javastart
+ #   /etc/init.d/gridview_platform start >> javastart
+    /etc/init.d/gridview_platform start &&  echo -e `date` >> javastart
+elif [ -z "$SSHPROC" -a -n "$JAVAPROC" ]; then
+    PROC="java"
+    checkProcLoad $PROC
+    echo -e `date`" \c" >> sshstart
+    /etc/init.d/sshd start >> sshstart
+else
+    echo -e `date`" \c" >> sshstart
+    /etc/init.d/sshd start >> sshstart
+#    echo -e `date`" \c" >> javastart
+#    /etc/init.d/gridview_platform start >> javastart
+   /etc/init.d/gridview_platform start   &&  echo -e `date` >> javastart
+fi
+
